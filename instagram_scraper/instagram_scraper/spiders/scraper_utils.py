@@ -145,27 +145,40 @@ async def extraer_nombres_con_scroll(page, max_count):
         return list(encontrados)
 
 def limpiar_conteo(texto):
+    
     """
-    Convierte textos como '4.2K' o '1.5M' en números enteros.
-    También quita comas y puntos.
+    Convierte textos como '4.2K', '1.5M', '1765 followers' o '37.1 mfollowers'
+    en números enteros puros.
     """
     if not texto or texto == "N/A":
         return texto
         
-    texto = texto.lower().replace(",", "").replace(" ", "")
+    # 1. Convertir a minúsculas y quitar la palabra 'follower' o cualquier letra extra
+    texto = texto.lower().replace("followers", "").replace("follower", "").replace(" ", "").replace(",", "")
     
     try:
-        if 'k' in texto:
-            return int(float(texto.replace('k', '')) * 1000)
+        # 2. Manejar Millones (M)
         if 'm' in texto:
-            return int(float(texto.replace('m', '')) * 1000000)
-        # Si tiene un punto decimal pero no sufijo (ej. 4.500 en algunas regiones)
+            valor = texto.replace('m', '')
+            return int(float(valor) * 1_000_000)
+            
+        # 3. Manejar Miles (K)
+        if 'k' in texto:
+            valor = texto.replace('k', '')
+            return int(float(valor) * 1_000)
+            
+        # 4. Si es un número puro con punto decimal (ej: 4.500)
         if '.' in texto:
+            # Si después del punto hay 3 dígitos, probablemente sea un separador de miles
+            partes = texto.split('.')
+            if len(partes[1]) == 3:
+                return int(texto.replace('.', ''))
             return int(float(texto))
+            
         return int(texto)
     except:
-        return texto # Si falla la conversión, devolvemos el texto original
-
+        # Si todo falla, devolvemos el texto original pero limpio de espacios
+        return texto.strip()
 async def extraer_conteo_seguidores(page):
     """
     Extrae el número de seguidores de un perfil de Instagram.
@@ -206,3 +219,78 @@ async def extraer_conteo_seguidores(page):
     except Exception as e:
         logger.error(f"❌ Error al extraer conteo: {str(e)}")
         return "Error"
+
+async def extraer_nombre_completo(page):
+    """
+    Extrae el nombre completo del perfil.
+    """
+    try:
+        # Selectores basados en la nueva captura (Daniel Vega) y estructuras comunes
+        selectors = [
+            # Selector de clases largas proporcionado por el usuario
+            'span.x1lliihq.x1plvlek.xryxfnj.x1n2onr6.xyejjpt.x15dsfln.x193iq5w.xeuu',
+            'header section div:nth-child(2) span', 
+            'header section h2',
+            'main header section div:nth-child(2) div:nth-child(1) span'
+        ]
+        
+        for selector in selectors:
+            try:
+                # Intentamos encontrar el elemento
+                element = await page.wait_for_selector(selector, timeout=3000)
+                if element:
+                    nombre = await element.inner_text()
+                    # Instagram suele poner el nombre debajo del nombre de usuario
+                    if nombre and len(nombre) > 0:
+                        return nombre.strip()
+            except:
+                continue
+        return "N/A"
+    except Exception:
+        return "N/A"
+
+async def extraer_biografia(page):
+    """
+    Extrae la biografía del perfil.
+    """
+    try:
+        # Selector basado en la captura anterior (clases _ap3a...)
+        selectors = [
+            'span._ap3a._aaco._aacu._aacx._aad7._aade',
+            'header section div:last-child span',
+            'div._ap3a',
+            'main header section div[dir="auto"] span'
+        ]
+        
+        for selector in selectors:
+            try:
+                elements = await page.query_selector_all(selector)
+                for el in elements:
+                    text = await el.inner_text()
+                    # La bio suele ser un bloque de texto más largo
+                    if text and len(text) > 3:
+                        return text.strip()
+            except:
+                continue
+        return ""
+    except Exception:
+        return ""
+
+async def extraer_datos_completos_perfil(page):
+    """
+    Extrae todos los datos relevantes de un perfil: seguidores, nombre y bio.
+    """
+    logger.info("🕵️ Extrayendo datos completos del perfil...")
+    
+    # Esperamos a que el perfil cargue un poco
+    await page.wait_for_timeout(2000)
+    
+    num_followers = await extraer_conteo_seguidores(page)
+    full_name = await extraer_nombre_completo(page)
+    biography = await extraer_biografia(page)
+    
+    return {
+        "num_followers": num_followers,
+        "full_name": full_name,
+        "biography": biography
+    }

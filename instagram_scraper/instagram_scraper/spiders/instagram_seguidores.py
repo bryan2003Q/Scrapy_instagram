@@ -5,7 +5,17 @@ from . import scraper_utils
 from ..items import InstagramScraperItem
 
 class InstagramSpider(scrapy.Spider):
-    name = "instagram"
+    name = "instagram_seguidores"
+    custom_settings = {
+        'FEEDS': {
+            'resultados.csv': {
+                'format': 'csv',
+                'encoding': 'utf-8',
+                'fields': ['Username', 'Username_Follower', 'Full_Name', 'Biography', 'Num_Followers'],
+                'overwrite': True,
+            }
+        }
+    }
     allowed_domains = ["instagram.com"]
     login_url = "https://www.instagram.com/accounts/login/"
 
@@ -131,13 +141,15 @@ class InstagramSpider(scrapy.Spider):
         try:
             self.logger.info(f"👤 Analizando perfil de: {follower_name}")
             
-            # Usamos la utilidad para extraer el número
-            num_followers = await scraper_utils.extraer_conteo_seguidores(page)
+            # Usamos la utilidad para extraer todos los datos del perfil
+            datos = await scraper_utils.extraer_datos_completos_perfil(page)
             
             item = InstagramScraperItem()
             item['Username'] = target
             item['Username_Follower'] = follower_name
-            item['Num_Followers'] = num_followers
+            item['Full_Name'] = datos['full_name']
+            item['Biography'] = datos['biography']
+            item['Num_Followers'] = datos['num_followers']
             
             yield item
             

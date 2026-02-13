@@ -76,18 +76,6 @@ LOG_LEVEL = "INFO"
 # Codificación de salida
 FEED_EXPORT_ENCODING = "utf-8"
 
-# ==============================================================================
-# CONFIGURACIÓN DE EXPORTACIÓN (CSV)
-# ==============================================================================
-FEEDS = {
-    "resultados.csv": {
-        "format": "csv",
-        "encoding": "utf-8",
-        "store_empty": False,
-        "fields": ["Username", "Username_Follower", "Num_Followers"],
-        "overwrite": True,
-    }
-}
 
-# Desactivar middlewares por defecto que no necesitemos o añadir nuevos si es necesario
-# DOWNLOADER_MIDDLEWARES = { ... }
+
+
