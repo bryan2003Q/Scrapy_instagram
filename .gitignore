@@ -1,0 +1,24 @@
+# Entorno y variables secretas
+.env
+
+# Archivos de Python (Compilados y Cache)
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.cache/
+
+# Archivos de inicio de módulo
+__init__.py
+
+# Imágenes
+*.png
+
+# Entornos virtuales
+venv/
+env/
+.venv/
+
+# Scrapy
+.scrapy/
