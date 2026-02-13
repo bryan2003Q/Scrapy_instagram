@@ -16,7 +16,6 @@ Este proyecto es una herramienta avanzada de web scraping diseñada para extraer
 PRACTICA_EVALUACION/
 ├── .gitignore               # Archivos ignorados por Git (.env, caché, etc.)
 ├── requirements.txt         # Dependencias del proyecto
-├── ig_scraper.py            # Script principal (Versión Híbrida Optimizada)
 ├── README.md                # Documentación del proyecto
 └── instagram_scraper/       # Proyecto Scrapy
     ├── .env                 # Variables de entorno (Credenciales)
@@ -76,4 +75,4 @@ scrapy crawl instagram
 - **Navegador**: Playwright se ejecuta en modo `headless=False` por defecto para mayor invisibilidad ante Instagram.
 
 ---
-*Desarrollado para la cátedra de Desarrollo de Sistemas de Información.*
+
